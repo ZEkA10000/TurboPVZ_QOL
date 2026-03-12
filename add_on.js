@@ -36,7 +36,7 @@
                 border-radius: 8px;
                 padding: 0 16px;
                 border-style: none;
-                color: rgb(0, 91, 255);
+                color: rgb(0, 91, 251);
                 font-size: 15px;
                 font-weight: 600;
                 height: 32px;
