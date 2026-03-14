@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Turbo PVZ Extra Utilities
 // @namespace    http://tampermonkey.net/
-// @version      0.1.100
+// @version      0.1.101
 // @description  QOL дополнение к сайту Турбо ПВЗ!
 // @author       zeka10000
 // @match        https://turbo-pvz.ozon.ru/*
@@ -228,7 +228,6 @@
             {0}
             `
 
-    _style.innerHTML = _custom_style.format("")
 
 
     let notifier = document.createElement("div")
@@ -300,6 +299,10 @@
     }
 
     var _ls = new TM_Database()
+    //alert(_ls.get("end_job"))
+
+    _style.innerHTML = _custom_style.format(`.${_ls.get("ads_list", []).join(", .")} {display:none}`)
+
 
     let workStart = new Date();
     let workEnd = new Date();
@@ -767,6 +770,12 @@
             // Кнопка для перетаскивания KTЯ в левую часть
             try_to_do(add_sendKTA_button, 50, 100, "КТЯ перетаскиватор")
 
+            try_to_do(function() {
+                if (cUrl == "https://turbo-pvz.ozon.ru/orders") {
+                    document.regexClassSelector(/ozi__informer__informer_/).style.display = "none"
+                    document.querySelector(`[data-testid="searchInput"]`).placeholder = "Отсканируйте или введите ШК клиента из OZON"
+                }
+            })
             // Анти-реклама
             // if (_ls.get("hide_ads", false)) try_to_do(remove_ads, 100, 150, "Удалить рекламу")
 
@@ -819,9 +828,9 @@
         let hide_ad_list = _ls.get("ads_list", [])
         if (!hide_ad_list.includes(_class)) {
             hide_ad_list.push(_class)
+            _ls.set("ads_list", hide_ad_list)
             document.querySelector('._z_style_').innerHTML = _custom_style.format(`.${hide_ad_list.join(", .")} {display:none}`)
         }
-
     }
     function return_ads() {
         document.querySelector('._z_style_').innerHTML = _custom_style.format("")
@@ -839,8 +848,6 @@
             need_to_pay.forEach(e => {
                 inpaid_sum += Number(e.innerText.replace(" ₽", "").replace(",", ".").replace("&nbsp;", ""))
             });
-            // console.log(all_items)
-            // console.log(paid_items)
             console.log(unpaid_items)
             console.log(inpaid_sum, "RUB")
             return "OK"
@@ -1020,7 +1027,11 @@
             start_job_i.type = "time"
             start_job_i.value = _ls.get("start_job")
             start_job_i.style.marginLeft = "5px"
+            start_job_i.onchange = function() {
+                _ls.set("start_job", start_job_i.value)
+            }
             start_job.appendChild(start_job_i)
+
 
             let end_job = document.createElement("p")
             end_job.id = "end_day"
@@ -1029,6 +1040,9 @@
             end_job_i.type = "time"
             end_job_i.value = _ls.get("end_job")
             end_job_i.style.marginLeft = "5px"
+            end_job_i.onchange = function() {
+                _ls.set("end_job", end_job_i.value)
+            }
             end_job.appendChild(end_job_i)
 
             time_section.appendChildren(start_job, end_job)
