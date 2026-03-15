@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Turbo PVZ Extra Utilities
 // @namespace    http://tampermonkey.net/
-// @version      0.1.101
+// @version      0.1.102
 // @description  QOL дополнение к сайту Турбо ПВЗ!
 // @author       zeka10000
 // @match        https://turbo-pvz.ozon.ru/*
@@ -248,6 +248,7 @@
              * @property {boolean} ignore_cancel_popup
              * @property {boolean} another_castle
              * @property {boolean} tell_unpaid_info
+             * @property {boolean} sendKTAAppear
              * @property {string[]} ads_list
              */
 
@@ -267,6 +268,7 @@
                 ignore_cancel_popup: false,
                 another_castle: false,
                 tell_unpaid_info: false,
+                sendKTAAppear: false,
                 ads_list: []
             }
             this.db = GM_getValue("localSettings", this.defaults)
@@ -277,7 +279,7 @@
                  * @param {keyof Settings} key
                  * @param {any} default_value
                  */
-        get(key, default_value) {
+        get(key, default_value=null) {
             return key in this.db ? this.db[key] : default_value;
         }
 
@@ -287,6 +289,7 @@
                  */
         set(key, value) {
             this.db[key] = value;
+            console.log(`${key} = ${value}`)
             this.save();
         }
         save() {
@@ -484,6 +487,7 @@
         let outer_span = document.createElement("span")
         check.style.lineHeight = "14px"
         check.style.fontSize = "15px"
+        check.style.marginBottom = "3px"
         outer_span.classList.add("z_checkbox")
         outer_span.innerHTML = '<span class="z_left"></span>'
         outer_span.setAttribute("on", 'false')
@@ -606,26 +610,19 @@
     const delay = 1000;
 
     // Перехват сканера
-    document.addEventListener('keydown', (event) => {
-        // Проверяем, что нажатая клавиша является символом
-        if (cUrl == "https://turbo-pvz.ozon.ru/orders" && _ls.get("another_castle", false)) {
-            if (event.key == "Enter") {
+    document.addEventListener('keydown', async (event) => {
+        if (event.key == "Enter") {
+            console.log("Enter нажат")
+            if (cUrl == "https://turbo-pvz.ozon.ru/orders" && _ls.get("another_castle", false)) {
                 let full_adress = document.regexClassSelector(/_businessSection_/).lastElementChild.lastChild.wholeText.split(",")
                 let adress = full_adress.slice(-3).join("").trim()
                 let progress = try_to_do(() => nigga_say(`Заказ клиента находится по адресу: ${adress}`, true), 50, 100, "Ваша принцесса в другом замке")
-                if (progress) { clearTimeout(timer_for_wrong_adress) }
+                //if (progress) { clearTimeout(timer_for_wrong_adress) }
             }
-        }
-        if (!isOn(/outbound\?id=\d+/)) {
-            scannedData = '';
-            return
-        }
-        if (event.key.length === 1) {
-            scannedData += event.key; // Добавляем символ к строке
-
-            clearTimeout(timer); // Сбрасываем таймер
-            timer = setTimeout(async () => {
-                // Обрабатываем считанный штрих-код после задержки
+            if (!isOn(/outbound\?id=\d+/)) {
+                scannedData = '';
+                return
+            } else {
                 console.log('Считанный штрих-код:', scannedData);
                 scannedData = processScannedBarcode(scannedData); // Обрабатываем штрих-код
                 console.log('Обработанный штрих-код:', scannedData);
@@ -646,10 +643,17 @@
                         }, 50, 100, "Завершаем ввод. Упаковка не требуется")
                     }
                     scannedData = '';
-                } else {
-                    scannedData = ''; // Очищаем строку для следующего сканирования
                 }
-            }, delay);
+            }
+        } else {
+            if (event.key.match(/[0-9A-zА-я]/)) {
+                scannedData += event.key
+                clearTimeout(timer); // Сбрасываем таймер
+                timer = setTimeout(() => {
+                    console.log(`Буфер ШК очищен ${scannedData}`)
+                    scannedData = ""
+                }, 5000)
+            }
         }
     });
 
@@ -659,8 +663,8 @@
         let rus = "ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ"
         let eng = `QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>`
         for(let i = 0; i < rus.length; i++) {
-           _bc = _bc.replace(rus[i], eng[i])
-           _bc = _bc.replace(rus[i].toLowerCase(), eng[i].toLowerCase())
+           _bc = _bc.replaceAll(rus[i], eng[i])
+           _bc = _bc.replaceAll(rus[i].toLowerCase(), eng[i].toLowerCase())
         }
         return _bc
     }
@@ -768,7 +772,7 @@
             try_to_do(make_outbounds_bigger, 50, 100, "Увеличение мелких элементов")
 
             // Кнопка для перетаскивания KTЯ в левую часть
-            try_to_do(add_sendKTA_button, 50, 100, "КТЯ перетаскиватор")
+            if (_ls.get("sendKTAAppear", false)) try_to_do(add_sendKTA_button, 50, 100, "КТЯ перетаскиватор")
 
             try_to_do(function() {
                 if (cUrl == "https://turbo-pvz.ozon.ru/orders") {
@@ -813,6 +817,7 @@
                     if (unsentKTA.length == 0) clearInterval(KTAinterval)
                 }, 500)
                 })
+                _sender.setAttribute("style", "display: table-cell; padding: 10px; margin-top:5px")
                 _sender.classList.add("z_sendKTA")
                 target_node.appendChild(_sender)
                 return "OK"
@@ -1007,7 +1012,7 @@
                 let target = document.querySelector("#settings_inside")
                 let state = target.style.height == "0px"
 
-                target.style.height = state ? "215px" : "0px"
+                target.style.height = state ? "240px" : "0px"
                 document.querySelector("#setting_arrow").setAttribute("d", state ? "M 4 12 L 12 4 L 20 12" : "M 4 12 L 12 20 L 20 12")
             })
             _expander.style.padding = "0px 10px"
@@ -1150,8 +1155,12 @@
                 else return_ads()
             })
 
-
-            other_section.appendChildren(no_ad)
+            let useKTASender = make_a_checkbox("Кнопка для авто КТЯ", true)
+            if (_ls.get("sendKTAAppear", false)) { check_switch(useKTASender.lastElementChild) }
+            useKTASender.lastElementChild.addEventListener("click", () => {
+                _ls.set("sendKTAAppear", useKTASender.is_active())
+            })
+            other_section.appendChildren(no_ad, useKTASender)
 
             settingsContainer.appendChild(header)
 
