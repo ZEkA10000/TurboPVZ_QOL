@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Turbo PVZ Extra Utilities
 // @namespace    http://tampermonkey.net/
-// @version      0.1.102
+// @version      0.1.103
 // @description  QOL дополнение к сайту Турбо ПВЗ!
 // @author       zeka10000
 // @match        https://turbo-pvz.ozon.ru/*
@@ -842,7 +842,7 @@
     }
 
     function calculateUnpaidItems() {
-        if (isOn(/orders\/client\/\d+/) && !cUrl.includes("summary")
+        if (isOn(/orders\/session\/\d+/) && !cUrl.includes("summary")
             // && !document.isHave(".z_check_all")
            ) {
             let all_items = document.regexClassSelectorAll(/_money_/)
@@ -893,7 +893,7 @@
 
     // Кнопка "Всё на проверку"
     function createCheckAllButton() {
-        if (isOn(/orders\/client\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_check_all")) {
+        if (isOn(/orders\/session\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_check_all")) {
             let check_count = document.querySelectorAll(`[data-testid="btnToCheck"]`).length
             let check_all = make_a_button("На проверку всё", true, () => {
                 Array(...document.querySelectorAll(`[data-testid="btnToCheck"]`)).filter(element => /Проверить/.test(element.innerHTML)).forEach(element => click_on(element) )
@@ -930,7 +930,7 @@
 
     // Кнопка "Выдать всё"
     function createAutoGivingButton() {
-        if (isOn(/orders\/client\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_auto_give")) {
+        if (isOn(/orders\/session\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_auto_give")) {
             let div = document.regexClassSelector(/_payment_/)
             let button = make_a_button("<p>Выдать заказ <u><b>без пакетов</b></u></p>", true, execute_auto_end)
             button.classList.add("z_auto_give")
@@ -958,7 +958,7 @@
         if (is_do_not_unpack) _wait += 1000
         if (is_specific_conditions) _wait += 2000
 
-        if (isOn(/orders\/client\/\d+/) && !document.isHave(".z_check_all")) {
+        if (isOn(/orders\/session\/\d+/) && !document.isHave(".z_check_all")) {
             setTimeout(() => {
                 let items_count = document.regexClassSelector(/_postings_/).children.length
                 let items_string = "товаров"
