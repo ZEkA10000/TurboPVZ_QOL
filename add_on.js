@@ -1,8 +1,9 @@
 
+
 // ==UserScript==
 // @name         Turbo PVZ Extra Utilities
 // @namespace    http://tampermonkey.net/
-// @version      0.1.103
+// @version      0.1.102
 // @description  QOL дополнение к сайту Турбо ПВЗ!
 // @author       zeka10000
 // @match        https://turbo-pvz.ozon.ru/*
@@ -205,26 +206,19 @@
                 height: fit-content;
                 border-radius: 8px;
             }
-            /*@keyframes rip_ad {
-                from {
-                    height: 164px;
-                    opacity: 1
-                }
-                to {
-                    height: 0px;
-                    opacity: 0
-                }
+            .blue_button {
+                background-color: rgb(0, 91, 255);
+                color: white;
+                border: 1px transparent solid;
+                border-radius: 8px;
+                padding: 6px 0;
+                font-family: Onest, Arial, Helvetica, sans-serif;
+                font-size: 16px;
+                font-weight: 600;
             }
-            @keyframes unrip_ad {
-                to {
-                    height: 164px;
-                    opacity: 1
-                }
-                from {
-                    height: 0px;
-                    opacity: 0
-                }
-            }*/
+            .blue_button:hover {
+                background-color: rgb(0, 80, 224);
+            }
             {0}
             `
 
@@ -506,6 +500,17 @@
         return check
     }
 
+    function uniques(arr) {
+        if (arr.length === 1) { return arr };
+        var a = [];
+        for (var i = 0, l = arr.length; i < l; i++) {
+            if (a.indexOf(arr[i]) === -1) {
+            a.push(arr[i]);
+            }
+        }
+        return a;
+    }
+
     /**
             //  * @param {"OK" | "WARNING" | "ERROR" | "LOG"} status
             **/
@@ -646,7 +651,7 @@
                 }
             }
         } else {
-            if (event.key.match(/[0-9A-zА-я]/)) {
+            if (event.key.match(/[0-9A-zА-я]/) && event.key.length == 1) {
                 scannedData += event.key
                 clearTimeout(timer); // Сбрасываем таймер
                 timer = setTimeout(() => {
@@ -693,6 +698,7 @@
                 await delay(interval)
             }
         }
+        console.error(error)
         print_message({header: "", status: "ERROR", tries: _max_attempts, name: comment, template: `Операция "{0}" вызывает ошибки! <br> Подробности в консоли...`})
         return false
     }
@@ -701,8 +707,7 @@
         const button = document.createElement("button");
         button.innerHTML = text;
         if (blue) {
-            button.setAttribute('data-testid', 'giveOutActionButton')
-            button.setAttribute("class", "ozi__button__button__5UTJi ozi__button__size-500__5UTJi ozi-body-500-true ozi__button__primary__5UTJi ozi__button__hug__5UTJi");
+            button.classList.add("blue_button")
         } else {
             button.classList.add("z_button_function")
         }
@@ -943,20 +948,32 @@
     // Назвать количество товаров к выдаче
     function tellItemAmount() {
         return "CANCELLED"
-        let _wait = 1500
+        if (isOn(/orders\/session\/\d+/)) {
+            let all_tags = document.regexClassSelectorAll(/_tags_/).filter(i => !i.getAttribute("class").includes("badges"))
+            if (all_tags.length == 0) throw "иди нахуй"
 
+            let texts = uniques(all_tags.map(i => {
+                let tag = i.regexClassSelector(/_badge__label_/)
+                if (tag) return i.regexClassSelector(/_badge__label_/).innerText
+                return null
+            }))
 
-        //_tags_1vf2o_54
+            let _wait = 3000
+console.log(texts)
+            let is_post_payment = texts.includes("Требуется оплата")
+            let is_ozon_bank = texts.includes("Ozon Банк")
+            let is_do_not_unpack = false
+            let is_specific_conditions = false
 
-        let is_post_payment = false        // Требуется оплата
-        let is_ozon_bank = false           // Ozon Банк
-        let is_do_not_unpack = false
-        let is_specific_conditions = false
+            if (is_post_payment) _wait += 1500
+            if (is_ozon_bank) _wait += 2000
+            if (is_do_not_unpack) _wait += 1000
+            if (is_specific_conditions) _wait += 2000
+            print_message({header: "Теги", status: "LOG", tries:0, name:texts.join(", ") + "| Ожидание: " + _wait + "мс", template:"{0}"})
 
-        if (is_post_payment) _wait += 1500
-        if (is_ozon_bank) _wait += 2000
-        if (is_do_not_unpack) _wait += 1000
-        if (is_specific_conditions) _wait += 2000
+            return "OK"
+        }
+        return "CANCELLED"
 
         if (isOn(/orders\/session\/\d+/) && !document.isHave(".z_check_all")) {
             setTimeout(() => {
