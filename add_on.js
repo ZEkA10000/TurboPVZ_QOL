@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.102
+    // @version      0.1.103
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
