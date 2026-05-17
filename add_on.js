@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.103
+    // @version      0.1.104
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -12,6 +12,10 @@
     // @grant        GM_listValues
     // @grant        GM_xmlhttpRequest
     // ==/UserScript==
+
+//document.regexClassSelector("_isPostPayment_").regexClassSelector("_widgetList_").firstElementChild
+
+//<div>3&nbsp;705,00 ₽</div>
 
     (function() {
         'use strict';
@@ -430,6 +434,39 @@
             });
             target.dispatchEvent(event);
         }
+        var evade_global_enter = false
+        function simulateEnterEnd(target) {
+            // убедиться, что курсор в конце (опционально)
+            const len = target.value.length;
+            try { target.setSelectionRange(len, len); } catch (e) {}
+
+            evade_global_enter = true
+            // триггерим input (на случай, если обработчики ждут его)
+            target.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+
+            // посылаем последовательность клавиат. событий для Enter
+            const makeKey = (type) => new KeyboardEvent(type, {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+            });
+            target.dispatchEvent(makeKey('keydown'));
+            target.dispatchEvent(makeKey('keypress'));
+            target.dispatchEvent(makeKey('keyup'));
+
+            // если ожидается отправка формы по Enter — инициируем submit
+            if (target.form) {
+                if (typeof target.form.requestSubmit === 'function') target.form.requestSubmit();
+                else target.form.submit();
+            }
+
+            // окончательное событие change (если кто-то слушает)
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+            evade_global_enter = false
+        }
 
         // Гибкий поиск querySelector и querySelectorAll
 
@@ -620,7 +657,7 @@
 
         // Перехват сканера
         document.addEventListener('keydown', async (event) => {
-            if (event.key == "Enter") {
+            if (event.key == "Enter" && !evade_global_enter) {
                 console.log("Enter нажат")
                 if (cUrl == "https://turbo-pvz.ozon.ru/orders" && _ls.get("another_castle", false)) {
                     let full_adress = document.regexClassSelector(/_businessSection_/).lastElementChild.lastChild.wholeText.split(",")
@@ -641,16 +678,22 @@
                             let _arr = document.regexClassSelectorAll(/ozi__radio__leftContent__/)
                             click_on(_arr[_arr.length - 1])
                         }, 50, 100, "Нажимаем кнопку. Упаковка не требуется")
-                        if (go_forward) {
+               /*         if (go_forward) {
                             go_forward = await try_to_do( () => {
-                                inputText(document.querySelector("[placeholder='Отсканируйте или введите вручную']"), scannedData)
+                                inputText(document.querySelector("[placeholder='Только с помощью сканера']"), scannedData)
                             }, 50, 100, "Вводим ШК. Упаковка не требуется")
                         }
                         if (go_forward) {
                             go_forward = await try_to_do( () => {
-                                click_on(document.regexClassSelectorAll("ozi__button__content__").find(element => element.innerText == "Завершить"))
-                            }, 50, 100, "Завершаем ввод. Упаковка не требуется")
+                                simulateEnterEnd(document.querySelector("[placeholder='Только с помощью сканера']"))
+                                console.log("отправил Enter");
+                            }, 50, 100, "Вводим ШК. Упаковка не требуется")
                         }
+                        if (go_forward) {
+                            go_forward = await try_to_do( () => {
+                              //  click_on(document.regexClassSelectorAll("ozi__button__content__").find(element => element.innerText == "Завершить"))
+                            }, 50, 100, "Завершаем ввод. Упаковка не требуется")
+                        }*/
                         scannedData = '';
                     }
                 }
@@ -917,18 +960,19 @@
 
                 let button1 = make_a_button("Создать Возвратный поток", false, async () => {
                     click_on(document.regexClassSelector(/_element_/))
-                    let go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/ozi__dialog__dialog__/).regexClassSelector(/ozi__input-select__rightContent__/)) }, 50, 200, "Нажать стрелочку")
-                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/ozi__dropdown__wrapper__/).children[0]) }, 50, 200, "Выбрать Возврат") }
-                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/_controlsRight_/).children[0]) }, 50, 200, "Подтвердить") }
+                    let go_forward = await try_to_do(() => { click_on(Array(...document.querySelectorAll(`[data-popover-reference="true"]`)).filter(e => e.innerText.includes("Направление"))[0]) }, 50, 200, "Нажать стрелочку")
+                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector("_dropdown__wrapper_").children[0]) }, 50, 200, "Выбрать Возврат") }
+                    if (go_forward) { go_forward = await try_to_do(() => { click_on(Array(...document.querySelectorAll("button")).filter(e => e.innerText == "Создать")[0]) }, 50, 200, "Подтвердить") }
                 })
                 button1.classList.add("z_button_function")
                 button1.setAttribute("style", "margin-bottom: 4px")
 
                 let button2 = make_a_button("Создать Прямой поток", false, async () => {
                     click_on(document.regexClassSelector(/_element_/))
-                    let go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/ozi__dialog__dialog__/).regexClassSelector(/ozi__input-select__rightContent__/)) }, 50, 200, "Нажать стрелочку")
-                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/ozi__dropdown__wrapper__/).children[1]) }, 50, 200, "Выбрать Возврат") }
-                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector(/_controlsRight_/).children[0]) }, 50, 200, "Выбрать Возврат")  }
+
+                    let go_forward = await try_to_do(() => { click_on(Array(...document.querySelectorAll(`[data-popover-reference="true"]`)).filter(e => e.innerText.includes("Направление"))[0]) }, 50, 200, "Нажать стрелочку")
+                    if (go_forward) { go_forward = await try_to_do(() => { click_on(document.regexClassSelector("_dropdown__wrapper_").children[1]) }, 50, 200, "Выбрать Возврат") }
+                    if (go_forward) { go_forward = await try_to_do(() => { click_on(Array(...document.querySelectorAll("button")).filter(e => e.innerText == "Создать")[0]) }, 50, 200, "Подтвердить") }
                 })
                 button2.classList.add("z_button_function")
 
