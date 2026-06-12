@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.104
+    // @version      0.1.105
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -14,6 +14,8 @@
     // ==/UserScript==
 
 //document.regexClassSelector("_isPostPayment_").regexClassSelector("_widgetList_").firstElementChild
+
+//
 
 //<div>3&nbsp;705,00 ₽</div>
 
@@ -225,6 +227,32 @@
                 .blue_button:hover {
                     background-color: rgb(0, 80, 224);
                 }
+
+                @keyframes custom_existment {
+                  from, to { transform: scale(1); opacity: 1; }
+                  5% { opacity: 0.6 }
+                  10% { opacity: 1 }
+                  15% { opacity: 0.6 }
+                  20% { opacity: 1 }
+                  25% { opacity: 0.6 }
+                  30% { opacity: 1 }
+                  35% { opacity: 0.6 }
+                  40% { opacity: 1 }
+                  45% { opacity: 0.6 }
+                  50% { transform: scale(1.1); opacity: 1 }
+                  55% { opacity: 0.6 }
+                  60% { opacity: 1 }
+                  65% { opacity: 0.6 }
+                  70% { opacity: 1 }
+                  75% { opacity: 0.6 }
+                  80% { opacity: 1 }
+                  85% { opacity: 0.6 }
+                  90% { opacity: 1 }
+                  95% { opacity: 0.6 }
+
+                }
+
+                .custom_exist_animation { animation: custom_existment 2s !important; }
                 {0}
                 `
 
@@ -655,8 +683,75 @@
         // Задержка в миллисекундах
         const delay = 1000;
 
+        //Object.defineProperty(Event.prototype, 'isTrusted', { get: () => true });
+
+        function enterSHK(code, element=null) {
+            evade_global_enter = true
+            /*
+            console.log(element)
+
+            if (element == null) {
+                switch (cUrl) {
+                    case "https://turbo-pvz.ozon.ru/orders": element = document.querySelector('[data-testid="searchInput"]'); break
+                    case "https://turbo-pvz.ozon.ru/search": element = document.querySelector('[inputmode="search"]'); break
+                    default: element = document.body
+                }
+            }
+            element.value = code;
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', bubbles: true }));
+            element.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+
+            console.log("code entered")
+            */
+            element.focus()
+            for (const char of code) {
+    // keydown
+                element.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: char,
+                    code: 'Key' + char.toUpperCase(),  // условно; для цифр это Digit1 и т.д.
+                    keyCode: char.charCodeAt(0),
+                    which: char.charCodeAt(0),
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true
+                }));
+                // keyup
+                element.dispatchEvent(new KeyboardEvent('keyup', {
+                    key: char,
+                    code: 'Key' + char.toUpperCase(),
+                    keyCode: char.charCodeAt(0),
+                    which: char.charCodeAt(0),
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true
+                }));
+                // Задержка 5 мс — реалистичный темп сканера
+                //await new Promise(r => setTimeout(r, 5));
+            }
+
+            // Завершающий Enter
+            element.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true
+            }));
+
+            console.log("code entered ar", element)
+            evade_global_enter = false
+        }
+
+
+        document.addEventListener('keyup', (event) => {
+            //console.log(event)
+        })
+
         // Перехват сканера
         document.addEventListener('keydown', async (event) => {
+            //console.log(event)
             if (event.key == "Enter" && !evade_global_enter) {
                 console.log("Enter нажат")
                 if (cUrl == "https://turbo-pvz.ozon.ru/orders" && _ls.get("another_castle", false)) {
@@ -664,6 +759,22 @@
                     let adress = full_adress.slice(-3).join("").trim()
                     let progress = try_to_do(() => nigga_say(`Заказ клиента находится по адресу: ${adress}`, true), 50, 100, "Ваша принцесса в другом замке")
                     //if (progress) { clearTimeout(timer_for_wrong_adress) }
+                    scannedData = '';
+                    return
+                }
+                if (cUrl.startsWith("https://turbo-pvz.ozon.ru/orders/session")) {
+                    try_to_do( () => {
+                        let item = document.regexClassSelector(/_scanAnimate_/)
+                        item.classList.forEach(e => {
+                            //console.log(e)
+                            if (e.includes("_scanAnimate_")) {
+                                item.classList.remove(e)
+                                return
+                            }
+                        })
+                        item.classList.remove("custom_exist_animation")
+                        item.classList.add("custom_exist_animation")
+                    }, 50, 100, "Замена анимации")
                 }
                 if (!isOn(/outbound\?id=\d+/)) {
                     scannedData = '';
@@ -678,22 +789,20 @@
                             let _arr = document.regexClassSelectorAll(/ozi__radio__leftContent__/)
                             click_on(_arr[_arr.length - 1])
                         }, 50, 100, "Нажимаем кнопку. Упаковка не требуется")
-               /*         if (go_forward) {
+                        if (go_forward) {
                             go_forward = await try_to_do( () => {
-                                inputText(document.querySelector("[placeholder='Только с помощью сканера']"), scannedData)
+                              //  setTimeout( () => {
+                                enterSHK(scannedData, document.querySelector("[placeholder='Только с помощью сканера']"))
+                              //  }, 200)
                             }, 50, 100, "Вводим ШК. Упаковка не требуется")
                         }
                         if (go_forward) {
-                            go_forward = await try_to_do( () => {
-                                simulateEnterEnd(document.querySelector("[placeholder='Только с помощью сканера']"))
-                                console.log("отправил Enter");
-                            }, 50, 100, "Вводим ШК. Упаковка не требуется")
+                           setTimeout( async () => {
+                                go_forward = await try_to_do( () => {
+                                    enterSHK(scannedData, document)
+                                }, 50, 100, "Вводим ШК. Упаковка не требуется")
+                            }, 2000)
                         }
-                        if (go_forward) {
-                            go_forward = await try_to_do( () => {
-                              //  click_on(document.regexClassSelectorAll("ozi__button__content__").find(element => element.innerText == "Завершить"))
-                            }, 50, 100, "Завершаем ввод. Упаковка не требуется")
-                        }*/
                         scannedData = '';
                     }
                 }
@@ -1366,6 +1475,8 @@
                 let selection = window.getSelection().toString()
                 console.log(selection)
                 nigga_say(selection)
+            } else if (event.key == "+") {
+                enterSHK("ii11807135000")
             }
         })
         console.log("Extra utilities initialization completed!")
