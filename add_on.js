@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.105
+    // @version      0.1.107
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -707,13 +707,14 @@
             */
             element.focus()
             for (const char of code) {
-    // keydown
+
                 element.dispatchEvent(new KeyboardEvent('keydown', {
                     key: char,
                     code: 'Key' + char.toUpperCase(),  // условно; для цифр это Digit1 и т.д.
                     keyCode: char.charCodeAt(0),
                     which: char.charCodeAt(0),
                     bubbles: true,
+                    shiftKey: char == char.toUpperCase(),
                     cancelable: true,
                     composed: true
                 }));
@@ -723,12 +724,11 @@
                     code: 'Key' + char.toUpperCase(),
                     keyCode: char.charCodeAt(0),
                     which: char.charCodeAt(0),
+                    shiftkey: char == char.toUpperCase(),
                     bubbles: true,
                     cancelable: true,
                     composed: true
                 }));
-                // Задержка 5 мс — реалистичный темп сканера
-                //await new Promise(r => setTimeout(r, 5));
             }
 
             // Завершающий Enter
@@ -740,13 +740,48 @@
                 bubbles: true
             }));
 
-            console.log("code entered ar", element)
+            console.log("code entered at", element)
             evade_global_enter = false
         }
 
+        document.addEventListener('keyup', async (event) => {
+            if (event.key == "Enter") {
+                if (isOn(/outbound\?id=\d+/)) {
+                    console.log("Обрабатываем упаковку")
+                    console.log('Считанный штрих-код:', scannedData);
+                    scannedData = processScannedBarcode(scannedData); // Обрабатываем штрих-код
+                    console.log('Обработанный штрих-код:', scannedData);
+                    if (Boolean(document.querySelector(".z_anti_box")) && document.querySelector(".z_anti_box").is_active()) {
+                        console.log("нажимаем кнопку")
+                        //alert(`Обработан штрих-код: ${scannedData}`);
+                        let go_forward = await try_to_do( () => {
+                            let _arr = document.regexClassSelectorAll(/ozi__radio__leftContent__/)
+                            click_on(_arr[_arr.length - 1])
+                        }, 100, 200, "Нажимаем кнопку. Упаковка не требуется")
+                        if (go_forward) {
+                            console.log("Вводим ШК")
+                            go_forward = await try_to_do( () => {
+                                enterSHK(scannedData, document.querySelector("[placeholder='Только с помощью сканера']"))
+                            }, 50, 2000, "Вводим ШК. Упаковка не требуется")
+                        }
+                        if (go_forward) {
+                                go_forward = await try_to_do( () => {
+                                    if (document.regexClassSelectorAll(/ozi__drawer__right__/).length > 0) throw "Жди сука"
+                                    console.log("Вводим после подтверждения")
+                                    enterSHK(scannedData, document.body)
+                                    // document.regexClassSelector(/_containerFull_/)
+                                }, 50, 500, "Вводим ШК, отправляем в поток. Упаковка не требуется.")
+                        }
+                        if (go_forward) {
+                            console.log("Принудительно чистим ШК")
+                            scannedData = '';
+                        }
+                    }
+                }
+            } else {
 
-        document.addEventListener('keyup', (event) => {
-            //console.log(event)
+            }
+           // console.log(event)
         })
 
         // Перехват сканера
@@ -780,6 +815,8 @@
                     scannedData = '';
                     return
                 } else {
+/*
+                    console.log("Обрабатываем упаковку")
                     console.log('Считанный штрих-код:', scannedData);
                     scannedData = processScannedBarcode(scannedData); // Обрабатываем штрих-код
                     console.log('Обработанный штрих-код:', scannedData);
@@ -788,27 +825,30 @@
                         let go_forward = await try_to_do( () => {
                             let _arr = document.regexClassSelectorAll(/ozi__radio__leftContent__/)
                             click_on(_arr[_arr.length - 1])
-                        }, 50, 100, "Нажимаем кнопку. Упаковка не требуется")
+                        }, 100, 200, "Нажимаем кнопку. Упаковка не требуется")
                         if (go_forward) {
                             go_forward = await try_to_do( () => {
                               //  setTimeout( () => {
                                 enterSHK(scannedData, document.querySelector("[placeholder='Только с помощью сканера']"))
                               //  }, 200)
-                            }, 50, 100, "Вводим ШК. Упаковка не требуется")
+                            }, 50, 200, "Вводим ШК. Упаковка не требуется")
                         }
                         if (go_forward) {
                            setTimeout( async () => {
                                 go_forward = await try_to_do( () => {
-                                    enterSHK(scannedData, document)
-                                }, 50, 100, "Вводим ШК. Упаковка не требуется")
+                                    enterSHK(scannedData, document.body)
+                                    // document.regexClassSelector(/_containerFull_/)
+                                }, 50, 100, "Вводим ШК, отправляем в поток. Упаковка не требуется.")
                             }, 2000)
                         }
                         scannedData = '';
-                    }
+                    }*/
                 }
             } else {
-                if (event.key.match(/[0-9A-zА-я]/) && event.key.length == 1) {
-                    scannedData += event.key
+                //   console.log(event.code, event.key, event.keyCode, event.which, event.shift)
+                if (event.key.match(/\S/) && event.key.length == 1) {
+                    scannedData += processScannedBarcode(event.key)
+                   // console.log(scannedData)
                     clearTimeout(timer); // Сбрасываем таймер
                     timer = setTimeout(() => {
                         console.log(`Буфер ШК очищен ${scannedData}`)
@@ -824,14 +864,16 @@
             let rus = "ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ"
             let eng = `QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>`
             for(let i = 0; i < rus.length; i++) {
-            _bc = _bc.replaceAll(rus[i], eng[i])
-            _bc = _bc.replaceAll(rus[i].toLowerCase(), eng[i].toLowerCase())
+              _bc = _bc.replaceAll(rus[i], eng[i])
+              _bc = _bc.replaceAll(rus[i].toLowerCase(), eng[i].toLowerCase())
             }
             return _bc
         }
 
         // Попытка выполнить задачу
         async function try_to_do(callback, _max_attempts = 50, interval=100, comment="") {
+            let now = new Date()
+           // console.log(`${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}::${now.getMilliseconds()} > Пробуем выполнить ${comment}`)
             function delay(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
@@ -1133,7 +1175,7 @@
         function createAutoGivingButton() {
             if (isOn(/orders\/session\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_auto_give")) {
                 let div = document.regexClassSelector(/_payment_/)
-                let button = make_a_button("<p>Выдать заказ <u><b>без пакетов</b></u></p>", true, execute_auto_end)
+                let button = make_a_button("<p>Выдать <u><b>в один клик</b></u></p>", true, execute_auto_end)
                 button.classList.add("z_auto_give")
                 div.appendChild(button)
                 return "OK"
@@ -1427,8 +1469,11 @@
                 timerRight.style.display = (_ls.get("time_show_percent") ? "block" : "none" )
                 let not_started = "Работа не началась"
                 let ended = "Дело сделано"
-                let time_now = `Сейчас: {0}ч {1}м {2}c`
-                let time_last = `Осталось: {0} {1} {2}`
+
+                const months = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+                let _today = `{0}-{1}-{2}`.format(now.getDate(), months[now.getMonth()], now.getFullYear())
+                let time_now = _today + ` | {0}`
+                let time_last = _today + ` | -{0}`
                 let totalWorkTime = workEnd - workStart; // Общее время работы в миллисекундах
                 let elapsedTime = now - workStart; // Прошедшее время в миллисекундах
                 let percentageElapsed = Math.max(0, Math.min((elapsedTime / totalWorkTime) * 100, 100));
@@ -1442,14 +1487,19 @@
                         let remainingMinutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
                         let remainingSeconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
 
-                        timerLeft.innerHTML = time_last.format(
-                            remainingHours   > 0 ? remainingHours   + "ч " : "",
-                            remainingMinutes > 0 ? remainingMinutes + "м " : "",
-                            remainingSeconds > 0 ? remainingSeconds + "c" : ""
-                        )
+                        let _output = []
+                        if (remainingHours > 0) _output.push(remainingHours)
+                        if (remainingMinutes > 0) _output.push(remainingMinutes.toString().padStart(2, "0"))
+                        if (remainingSeconds > 0) _output.push(remainingSeconds.toString().padStart(2, "0"))
+
+                        timerLeft.innerHTML = time_last.format(_output.join(":"))
                     }
                 } else if (_ls.get("time_now")) {
-                    timerLeft.innerHTML = time_now.format(now.getHours(), now.getMinutes(), now.getSeconds())
+                    let _output = []
+                    if (now.getHours() > 0) _output.push(now.getHours())
+                    if (now.getMinutes() > 0) _output.push(now.getMinutes().toString().padStart(2, "0"))
+                    if (now.getSeconds() > 0) _output.push(now.getSeconds().toString().padStart(2, "0"))
+                    timerLeft.innerHTML = time_now.format(_output.join(":"))
                 }
 
                 timerLeft.style.display = _ls.get("time_hide") ? "none" : "block"
