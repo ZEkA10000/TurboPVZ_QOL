@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.107
+    // @version      0.1.108
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -705,48 +705,62 @@
 
             console.log("code entered")
             */
-            element.focus()
-            for (const char of code) {
+            //element.focus()
 
-                element.dispatchEvent(new KeyboardEvent('keydown', {
-                    key: char,
-                    code: 'Key' + char.toUpperCase(),  // условно; для цифр это Digit1 и т.д.
-                    keyCode: char.charCodeAt(0),
-                    which: char.charCodeAt(0),
-                    bubbles: true,
-                    shiftKey: char == char.toUpperCase(),
-                    cancelable: true,
-                    composed: true
-                }));
-                // keyup
-                element.dispatchEvent(new KeyboardEvent('keyup', {
-                    key: char,
-                    code: 'Key' + char.toUpperCase(),
-                    keyCode: char.charCodeAt(0),
-                    which: char.charCodeAt(0),
-                    shiftkey: char == char.toUpperCase(),
-                    bubbles: true,
-                    cancelable: true,
-                    composed: true
-                }));
+            if (document.querySelector("#codePreview") == null) {
+                let a = document.createElement("div")
+                a.style.marginLeft = "10px"
+                a.id = "codePreview"
+                let b = document.regexClassSelector(/_title_/)
+                b.append(a)
             }
 
-            // Завершающий Enter
-            element.dispatchEvent(new KeyboardEvent('keydown', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true
-            }));
+            if (element != null) {
+                if (element.getAttribute("readonly") == "") element.removeAttribute("readonly")
+                document.querySelector("#codePreview").innerText = ""
+                for (const char of code) {
+                    document.querySelector("#codePreview").innerText += char
+                    //console.log("pressing " + char)
+                    element.dispatchEvent(new KeyboardEvent('keydown', {
+                        key: char,
+                        code: 'Key' + char.toUpperCase(),  // условно; для цифр это Digit1 и т.д.
+                        keyCode: char.charCodeAt(0),
+                        which: char.charCodeAt(0),
+                        bubbles: true,
+                        shiftKey: char == char.toUpperCase(),
+                        cancelable: true,
+                        composed: true
+                    }));
+                    // keyup
+                    element.dispatchEvent(new KeyboardEvent('keyup', {
+                        key: char,
+                        code: 'Key' + char.toUpperCase(),
+                        keyCode: char.charCodeAt(0),
+                        which: char.charCodeAt(0),
+                        shiftkey: char == char.toUpperCase(),
+                        bubbles: true,
+                        cancelable: true,
+                        composed: true
+                    }));
+                }
 
-            console.log("code entered at", element)
+                // Завершающий Enter
+                element.dispatchEvent(new KeyboardEvent('keydown', {
+                    key: 'Enter',
+                    code: 'Enter',
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true
+                }));
+                console.log("code entered at", element)
+            }
             evade_global_enter = false
         }
 
         document.addEventListener('keyup', async (event) => {
             if (event.key == "Enter") {
                 if (isOn(/outbound\?id=\d+/)) {
+                    if (document.regexClassSelectorAll(/ozi__backdrop__backdrop__/).length > 0) return
                     console.log("Обрабатываем упаковку")
                     console.log('Считанный штрих-код:', scannedData);
                     scannedData = processScannedBarcode(scannedData); // Обрабатываем штрих-код
@@ -761,18 +775,24 @@
                         if (go_forward) {
                             console.log("Вводим ШК")
                             go_forward = await try_to_do( () => {
+                                console.log("Вводим ШК " + scannedData)
                                 enterSHK(scannedData, document.querySelector("[placeholder='Только с помощью сканера']"))
                             }, 50, 2000, "Вводим ШК. Упаковка не требуется")
                         }
+                        let goForward = false
                         if (go_forward) {
-                                go_forward = await try_to_do( () => {
-                                    if (document.regexClassSelectorAll(/ozi__drawer__right__/).length > 0) throw "Жди сука"
+                            goForward = await try_to_do( () => { throw "Ждём" }, 5, 100, "Намеренно ждём с ошибками")
+                        }
+                        if (!goForward) {
+                            goForward = await try_to_do( () => {
+                                    if (document.regexClassSelectorAll(/ozi__backdrop__backdrop__/).length > 0) throw "Жди сука"
+
                                     console.log("Вводим после подтверждения")
                                     enterSHK(scannedData, document.body)
                                     // document.regexClassSelector(/_containerFull_/)
                                 }, 50, 500, "Вводим ШК, отправляем в поток. Упаковка не требуется.")
                         }
-                        if (go_forward) {
+                        if (goForward) {
                             console.log("Принудительно чистим ШК")
                             scannedData = '';
                         }
@@ -846,14 +866,16 @@
                 }
             } else {
                 //   console.log(event.code, event.key, event.keyCode, event.which, event.shift)
-                if (event.key.match(/\S/) && event.key.length == 1) {
+                if (event.key.length == 1 && !evade_global_enter) {
+//                    let _key = event.key
                     scannedData += processScannedBarcode(event.key)
+                   // console.log(scannedData)
                    // console.log(scannedData)
                     clearTimeout(timer); // Сбрасываем таймер
                     timer = setTimeout(() => {
                         console.log(`Буфер ШК очищен ${scannedData}`)
                         scannedData = ""
-                    }, 5000)
+                    }, 2000)
                 }
             }
         });
