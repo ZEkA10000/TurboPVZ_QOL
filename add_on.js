@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.108
+    // @version      0.1.109
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -707,19 +707,19 @@
             */
             //element.focus()
 
-            if (document.querySelector("#codePreview") == null) {
-                let a = document.createElement("div")
-                a.style.marginLeft = "10px"
-                a.id = "codePreview"
-                let b = document.regexClassSelector(/_title_/)
-                b.append(a)
-            }
+            // if (document.querySelector("#codePreview") == null) {
+            //     let a = document.createElement("div")
+            //     a.style.marginLeft = "10px"
+            //     a.id = "codePreview"
+            //     let b = document.regexClassSelector(/_title_/)
+            //     b.append(a)
+            // }
 
             if (element != null) {
                 if (element.getAttribute("readonly") == "") element.removeAttribute("readonly")
-                document.querySelector("#codePreview").innerText = ""
+                // document.querySelector("#codePreview").innerText = ""
                 for (const char of code) {
-                    document.querySelector("#codePreview").innerText += char
+                    // document.querySelector("#codePreview").innerText += char
                     //console.log("pressing " + char)
                     element.dispatchEvent(new KeyboardEvent('keydown', {
                         key: char,
@@ -1005,8 +1005,12 @@
 
                 try_to_do(function() {
                     if (cUrl == "https://turbo-pvz.ozon.ru/orders") {
-                        document.regexClassSelector(/ozi__informer__informer_/).style.display = "none"
+                        document.regexClassSelectorAll(/ozi__informer__informer_/).forEach(e => e.style.display = "none")
+                        document.regexClassSelectorAll(/ozi__header__header_/).forEach(e => e.style.paddingTop = 0)
                         document.querySelector(`[data-testid="searchInput"]`).placeholder = "Отсканируйте или введите ШК клиента из OZON"
+
+                        document.regexClassSelector(/_logo_/).regexClassSelector(/_text-view_/).style.display = "none"
+                        document.regexClassSelector(/_stores_/).regexClassSelector(/_input__root_/).style.width = "140px"
                     }
                 })
                 // Анти-реклама
@@ -1084,6 +1088,21 @@
                         _sender.classList.add("z_sendKTA")
                         target_node.appendChild(_sender)
                     }
+                    if (!document.isHave(".z_manualInput")) {
+                        let _btn =  make_a_button("Ввести ШК  вручную", true, () => {
+                            let shk = prompt("Введите ШК", "")
+                            if (shk != "" && shk != null) {
+                                enterSHK(shk, document.body)
+                                print_message({header: "Ручной ввод ШК", status: "OK", tries: 1, name: "", template: "Готово"})
+                            } else {
+                                print_message({header: "Ручной ввод ШК", status: "ERROR", tries: 1, name: "", template: "Нужно ввести не пустой ШК"})
+                            }
+                        })
+
+                        _btn.setAttribute("style", "display: table-cell; padding: 1px 6px; font: menu; font-weight: 700; width: 90px; font-size: 14px;")
+                        _btn.classList.add("z_manualInput")
+                        target_node.appendChild(_btn)
+                    }
                 }
                 button_container.appendChild(target_node)
                 return "OK"
@@ -1100,6 +1119,7 @@
                 _ls.set("ads_list", hide_ad_list)
                 document.querySelector('._z_style_').innerHTML = _custom_style.format(`.${hide_ad_list.join(", .")} {display:none}`)
             }
+
         }
         function return_ads() {
             document.querySelector('._z_style_').innerHTML = _custom_style.format("")
@@ -1158,7 +1178,7 @@
 
         // Кнопка "Всё на проверку"
         function createCheckAllButton() {
-            if (isOn(/orders\/session\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_check_all")) {
+            if (isOn(/orders\/session-new\/\d+/) && !cUrl.includes("summary") && !document.isHave(".z_check_all")) {
                 let check_count = document.querySelectorAll(`[data-testid="btnToCheck"]`).length
                 let check_all = make_a_button("На проверку всё", true, () => {
                     Array(...document.querySelectorAll(`[data-testid="btnToCheck"]`)).filter(element => /Проверить/.test(element.innerHTML)).forEach(element => click_on(element) )
@@ -1167,7 +1187,7 @@
                 check_all.classList.add("z_check_all")
                 check_all.setAttribute("style", "padding: 0 10px; line-height: 43px;")
                 if (check_count == 0) { check_all.style.opacity = 0.3 }
-                document.regexClassSelector(/ozi__filter-chip-group__filterChipGroup__/).appendChild(check_all)
+                document.regexClassSelector(/ozi__filter-chip-group__filterChipGroup/).appendChild(check_all)
                 return "OK"
             }
             return "CANCELLED"
@@ -1220,7 +1240,7 @@
 
                 // Пломба
                 let _wait = 3000
-    console.log(texts)
+                console.log(texts)
                 let is_post_payment = texts.includes("Требуется оплата")
                 let is_ozon_bank = texts.includes("Ozon Банк")
                 let is_do_not_unpack = false
@@ -1471,6 +1491,8 @@
                 _timer_container.appendChildren(_activator ,ass)
 
                 document.regexClassSelector(/ozi__header__rightContent__/).prepend(_timer_container)
+
+
                 return "OK"
             }
             return "CANCELLED"
@@ -1548,7 +1570,7 @@
                 console.log(selection)
                 nigga_say(selection)
             } else if (event.key == "+") {
-                enterSHK("ii11807135000")
+                // enterSHK("ii11807135000")
             }
         })
         console.log("Extra utilities initialization completed!")
