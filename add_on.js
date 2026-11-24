@@ -1,7 +1,7 @@
     // ==UserScript==
     // @name         Turbo PVZ Extra Utilities
     // @namespace    http://tampermonkey.net/
-    // @version      0.1.109
+    // @version      0.1.110
     // @description  QOL дополнение к сайту Турбо ПВЗ!
     // @author       zeka10000
     // @match        https://turbo-pvz.ozon.ru/*
@@ -35,228 +35,32 @@
         _style.classList.add("_z_style_")
 
         let _custom_style = `
-                .z_button_function {
-                    background: rgba(30, 55, 105, 0.06);
-                    cursor: pointer;
-                    border-radius: 8px;
-                    padding: 0 16px;
-                    border-style: none;
-                    color: rgb(0, 91, 251);
-                    font-size: 15px;
-                    font-weight: 600;
-                    height: 32px;
-                    transition: 0.3s;
-                    text-decoration: none;
-
-                    &:hover {
-                        background: rgba(30, 55, 105, 0.1);
-                        text-decoration: underline
-                    }
-                }
+                .z_button_function { background: rgba(30, 55, 105, 0.06); cursor: pointer; border-radius: 8px; padding: 0 16px; border-style: none; color: rgb(0, 91, 251); font-size: 15px; font-weight: 600; height: 32px; transition: 0.3s; text-decoration: none; &:hover { background: rgba(30, 55, 105, 0.1); text-decoration: underline } }
                 span.z_left { transform: translate(0px); }
                 span.z_right { transform: translate(16px); }
-                .z_checkbox {
-                    display:inline-block;
-                    width:30px;
-                    height:14px;
-                    border: none;
-                    background-color: #0f2d4b26;
-                    transition: 0.3s;
-                    padding: 3px;
-                    border-radius: 10px;
-                    text-align: left;
-                    user-select: none;
-                    margin-right: 10px;
-
-                    & .z_left, & .z_right {
-                        display: inline-block;
-                        width:14px;
-                        height:14px;
-                        border: none;
-                        background-color: white;
-                        border-radius: 7px;
-                        transition: 0.3s;
-                    }
-                }
-                .z_i_checkbox {
-                    stroke: #005bff;
-                    transition: 0.3s
-                }
-                .timer_activator {
-                    display:block;
-                    grid-row: 1;
-                    line-height: 30px;
-                    cursor:pointer;
-                    border: 1px black solid;
-                    border-radius: 5px; width: 32px;
-                    height: 28px;
-                    text-align: center;
-                    margin: 1px -1px 0px 0px;
-                }
-                .z_timer {
-                    display: grid;
-                    background-image: linear-gradient(to right, rgb(0, 68, 0), rgb(0, 187, 0)), linear-gradient(to right, rgb(17 0 0), rgb(85, 0, 0));
-                    width: 0px;
-                    height: 30px;
-                    background-size: 0%, auto;
-                    background-repeat: no-repeat, no-repeat;
-                    color:white;
-                    text-align: center;
-                    font-size: 16px;
-                    text-shadow: -1px 1px 0 #000,-0 -1px 0 #000,0 -1px 0 #000,-0 1px 0 #000,0 1px 0 #000,-1px -0 0 #000,1px -0 0 #000,-1px 0 0 #000,1px 0 0 #000,-1px -1px 0 #000,1px -1px 0 #000,1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-                    transition: 0.3s;
-                    transition-property: width;
-                    grid-row: 1;
-                    overflow:hidden;
-                    border: 1px transparent solid;
-                    border-radius: 0 10px 10px 0;
-                }
-                .z_timer_text, .z_timer_percent {
-                    display:block;
-                    grid-row: 1;
-                    line-height: 30px;
-                    margin: 0;
-                }
-                .z_auto_give {
-                    display: table-cell;
-                    width: auto;
-                }
-                .z_settings_container {
-                    font-size: 15px;
-                    margin-top: 7px;
-                    border: 1px solid #6183a242;
-                    border-radius: 10px;
-                    padding: 16px 24px;
-                    width: 750px;
-                }
-                .z_popup {
-                    /*width: 368px;*/
-                    padding: 5px 5px;
-                    border-radius: 8px;
-                    color: white;
-                    opacity: 0;
-                    animation: appear 10s ease-in-out forwards;
-
-                    &.success { background: linear-gradient(to right, #34d865 4px, #202e41bb 4px); }
-                    &.warning { background: linear-gradient(to right, #c8d834 4px, #202e41bb 4px); }
-                    &.error   { background: linear-gradient(to right, #d83434 4px, #202e41bb 4px); }
-                    &.log     { background: linear-gradient(to right, #bbb 4px, #202e41bb 4px); }
-
-                    & div { display: grid; justify-content: start; }
-
-                    & p {
-                        line-height: 20px;
-                        margin: 0;
-                    }
-
-                    & .sign {
-                        width: 30px;
-                        font-size: 20px;
-                    }
-                    & .header {
-                        font-weight: bold;
-                        font-size: 16px;
-                        grid-area: 1 / 2;
-                    }
-                    & .description {
-                        font-size: 15px;
-                        grid-area: 2/2
-                    }
-                }
-                #z_notify_layer {
-                    position: fixed;
-                    z-index: 1501;
-                    right: 0;
-                    left: auto;
-                    bottom: 0;
-                    top: auto;
-                    padding: 10px;
-                    pointer-events: none;
-                }
-                @keyframes appear {
-                    from {
-                        opacity: 0;
-                        margin-top: -94px;
-                    }
-                    5%, 95%{
-                        opacity: 1;
-                        margin-top: 10px;
-                    }
-                    to {
-                        opacity: 0;
-                    }
-                }
-                #settings_inside {
-                    overflow:hidden;
-                    height:0px;
-                    transition:0.3s;
-                    display: grid;
-                    grid-gap: 10px;
-                    & p {
-                        margin: 0
-                    }
-
-                }
-                .z_setting_header {
-                    font-size: 17px;
-                    margin: 0px;
-                    font-weight: bold;
-                    &.group_header {
-                        text-shadow: -1px 1px 0 #fff,-0 -1px 0 #fff,0 -1px 0 #fff,-0 1px 0 #fff,0 1px 0 #fff,-1px -0 0 #fff,1px -0 0 #fff,-1px 0 0 #fff,1px 0 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
-                        margin-top: -20px !important;
-                        color: royalblue;
-                    }
-                }
-                .setting_category {
-                    border: 1px #6183a242 solid;
-                    padding: 5px;
-                    margin-top: 10px;
-                    height: fit-content;
-                    border-radius: 8px;
-                }
-                .blue_button {
-                    background-color: #005bff;
-                    color: white;
-                    border: 1px transparent solid;
-                    border-radius: 8px;
-                    padding: 6px 0;
-                    font-family: Onest, Arial, Helvetica, sans-serif;
-                    font-size: 16px;
-                    font-weight: 600;
-                }
-                .blue_button:hover {
-                    background-color: rgb(0, 80, 224);
-                }
-
-                @keyframes custom_existment {
-                  from, to { transform: scale(1); opacity: 1; }
-                  5% { opacity: 0.6 }
-                  10% { opacity: 1 }
-                  15% { opacity: 0.6 }
-                  20% { opacity: 1 }
-                  25% { opacity: 0.6 }
-                  30% { opacity: 1 }
-                  35% { opacity: 0.6 }
-                  40% { opacity: 1 }
-                  45% { opacity: 0.6 }
-                  50% { transform: scale(1.1); opacity: 1 }
-                  55% { opacity: 0.6 }
-                  60% { opacity: 1 }
-                  65% { opacity: 0.6 }
-                  70% { opacity: 1 }
-                  75% { opacity: 0.6 }
-                  80% { opacity: 1 }
-                  85% { opacity: 0.6 }
-                  90% { opacity: 1 }
-                  95% { opacity: 0.6 }
-
-                }
-
+                .z_checkbox { display:inline-block; width:30px; height:14px; border: none; background-color: #0f2d4b26; transition: 0.3s; padding: 3px; border-radius: 10px; text-align: left; user-select: none; margin-right: 10px; & .z_left, & .z_right { display: inline-block; width:14px; height:14px; border: none; background-color: white; border-radius: 7px; transition: 0.3s; } }
+                .z_i_checkbox { stroke: #005bff; transition: 0.3s }
+                .timer_activator { display:block; grid-row: 1; line-height: 30px; cursor:pointer; border: 1px black solid; border-radius: 5px; width: 32px; height: 28px; text-align: center; margin: 1px -1px 0px 0px; }
+                .z_timer { display: grid; background-image: linear-gradient(to right, rgb(0, 68, 0), rgb(0, 187, 0)), linear-gradient(to right, rgb(17 0 0), rgb(85, 0, 0)); width: 0px; height: 30px; background-size: 0%, auto; background-repeat: no-repeat, no-repeat; color:white; text-align: center; font-size: 16px; text-shadow: -1px 1px 0 #000,-0 -1px 0 #000,0 -1px 0 #000,-0 1px 0 #000,0 1px 0 #000,-1px -0 0 #000,1px -0 0 #000,-1px 0 0 #000,1px 0 0 #000,-1px -1px 0 #000,1px -1px 0 #000,1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; transition: 0.3s; transition-property: width; grid-row: 1; overflow:hidden; border: 1px transparent solid; border-radius: 0 10px 10px 0; }
+                .z_timer_text, .z_timer_percent { display:block; grid-row: 1; line-height: 30px; margin: 0; }
+                .z_auto_give { display: table-cell; width: auto; }
+                .z_settings_container { font-size: 15px; margin-top: 7px; border: 1px solid #6183a242; border-radius: 10px; padding: 16px 24px; width: 750px; }
+                .z_popup { padding: 5px 5px; border-radius: 8px; color: white; opacity: 0; animation: appear 10s ease-in-out forwards; &.success { background: linear-gradient(to right, #34d865 4px, #202e41bb 4px); } &.warning { background: linear-gradient(to right, #c8d834 4px, #202e41bb 4px); } &.error   { background: linear-gradient(to right, #d83434 4px, #202e41bb 4px); } &.log     { background: linear-gradient(to right, #bbbbbb 4px, #202e41bb 4px); } & div { display: grid; justify-content: start; } & p { line-height: 20px; margin: 0; } & .sign { width: 30px; font-size: 20px; } & .header { font-weight: bold; font-size: 16px; grid-area: 1 / 2; } & .description { font-size: 15px; grid-area: 2/2 } }
+                #z_notify_layer { position: fixed; z-index: 1502; right: 0; left: auto; bottom: 0; top: auto; padding: 10px; pointer-events: none; }
+                #z_setting_layer { position: fixed; z-index: 1501; left: 0; top: 0; padding: 10px; pointer-events: none; overflow:hidden; width: 100vw; height: 100vh; background-color: #0003}
+                @keyframes appear { from { opacity: 0; margin-top: -94px; } 5%, 95%{ opacity: 1; margin-top: 10px; } to { opacity: 0; } }
+                #settings_inside { overflow:hidden; height:0px; transition:0.3s; display: grid; grid-gap: 10px; & p { margin: 0 } }
+                .z_setting_header { font-size: 17px; margin: 0px; font-weight: bold; &.group_header { text-shadow: -1px 1px 0 #fff,-0 -1px 0 #fff,0 -1px 0 #fff,-0 1px 0 #fff,0 1px 0 #fff,-1px -0 0 #fff,1px -0 0 #fff,-1px 0 0 #fff,1px 0 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; margin-top: -20px !important; color: royalblue; } }
+                .setting_category { border: 1px #6183a242 solid; padding: 5px; margin-top: 10px; height: fit-content; border-radius: 8px; }
+                .blue_button { background-color: #005bff; color: white; border: 1px transparent solid; border-radius: 8px; padding: 6px 0; font-family: Onest, Arial, Helvetica, sans-serif; font-size: 16px; font-weight: 600; &:hover { background-color: rgb(0, 80, 224); } }
+                @keyframes custom_existment { from, to { transform: scale(1); opacity: 1; } 5%, 15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% { opacity: 0.6 } 50% { transform: scale(1.1); opacity: 1 } 10%, 20%, 30%, 40%, 60%, 70%, 80%, 90% { opacity: 1 } }
                 .custom_exist_animation { animation: custom_existment 2s !important; }
                 {0}
                 `
 
 
+        let settings_layer = document.createElement("div")
+       //settings_layer.id = "z_setting_layer"
 
         let notifier = document.createElement("div")
         notifier.id = "z_notify_layer"
@@ -643,7 +447,7 @@
         // Пихнуть несколько элементов
         Element.prototype.appendChildren = function (...elements) { elements.forEach(element => { this.appendChild(element) }); }
 
-        document.body.appendChildren(_style, notifier)
+        document.body.appendChildren(_style, notifier, settings_layer)
 
         // Проверить наличие элемента
         Element.prototype.isHave = function(selector) { return this.querySelector(selector) !== null; };
@@ -992,17 +796,6 @@
 
                 try_to_do(addOutboundFeatures, 50, 100, "Улучшайзинг выгрузки")
 
-                // setTimeout(addOutboundFeatures, 3000)
-
-                // Анти-упаковка
-            // try_to_do(createAntiPackingCheck, 50, 100, "Вставка галочки Антиупаковки")
-
-                // Крупнее парочка элементов
-            //  try_to_do(make_outbounds_bigger, 50, 100, "Увеличение мелких элементов")
-
-                // Кнопка для перетаскивания KTЯ в левую часть
-            //  if (_ls.get("sendKTAAppear", false)) try_to_do(add_sendKTA_button, 50, 100, "КТЯ перетаскиватор")
-
                 try_to_do(function() {
                     if (cUrl == "https://turbo-pvz.ozon.ru/orders") {
                         document.regexClassSelectorAll(/ozi__informer__informer_/).forEach(e => e.style.display = "none")
@@ -1017,20 +810,47 @@
                 // if (_ls.get("hide_ads", false)) try_to_do(remove_ads, 100, 150, "Удалить рекламу")
 
             }
+            try_to_do(() => {
+                     if (cUrl == "https://turbo-pvz.ozon.ru/outbound/selection") { // Ozon полка
+                         const classes = ["_cell_", "_cells_"]
+                         classes.forEach((cls) => {
+                             document.regexClassSelectorAll(cls).filter((e) => e.innerText.includes("-") && e.tagName == "DIV")
+                                 .forEach((e) => {
+                                 e.regexClassSelector("ozi__badge__label_").setAttribute("style", "font-size: 18px; text-wrap: auto; textOverflow: clip")
+                                 if (e.regexClassSelector("ozi__badge__label_").innerText.startsWith("Ozon Полка")) {
+                                     e.regexClassSelector("ozi__badge__label_").innerHTML = e.regexClassSelector("ozi__badge__label_").innerText.replace("Ozon Полка", "ОП")
+                                 }
+                                 e.firstElementChild.style.height = "auto"
+                             })
+                         })
+                         document.regexClassSelectorAll("_cutOff_").forEach(e => e.setAttribute("style", "font-size: 18px; text-wrap: auto; textOverflow: clip"))
+
+                     }
+                }, 50, 100, "Увеличение текста")
         }, 500)
 
         var KTAinterval = null
         function addOutboundFeatures() {
             if (cUrl.startsWith("https://turbo-pvz.ozon.ru/outbound?id=") && !cUrl.includes("id=-")) {
-                let button_container = document.regexClassSelectorAll(/ozi__informer__informer__/).filter( e => e.innerText.includes("Добавьте"))[0]
-                button_container.style.padding = "12px 10px"
-                button_container.firstElementChild.style.fontWeight = "bold"
-                button_container.firstElementChild.style.textAlign = "center"
+                let button_container = document.regexClassSelectorAll("ozi__text-view_").filter(e => e.innerText.includes("Полка"))[0]
+                button_container.innerHTML = ""
+                console.log(button_container.parentElement)
+                button_container.parentElement.style.padding = "8px"
+                button_container.parentElement.style.backgroundColor = "lavender"
+
+                //button_container.firstElementChild.style.fontWeight = "bold"
+                //button_container.firstElementChild.style.textAlign = "center"
 
                 // button_container.innerHTML = `<h3 style="text-align: center; font-weight: bold; color: black;">Добавьте содержимое в перевозку</h3>`
                 let target_node = document.createElement("div")
                 target_node.style.display = "flex"
+                target_node.style.alignItems = "center"
                 target_node.classList.add("z_out_actions")
+
+                let label = document.createElement("p")
+                label.innerHTML = "<b>Лайфхаки:</b>&nbsp"
+                label.style.margin = "0"
+                target_node.appendChild(label)
 
                 // Увеличить картинки и числа
                 function make_outbounds_bigger() {
